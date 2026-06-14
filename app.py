@@ -1,5 +1,8 @@
 import random
 import streamlit as st
+from logic_utils import check_guess, get_hint_message
+
+#FIX: Refactored logic into logic_utils.py using agent mode
 
 def get_range_for_difficulty(difficulty: str):
     if difficulty == "Easy":
@@ -29,22 +32,7 @@ def parse_guess(raw: str):
     return True, value, None
 
 
-def check_guess(guess, secret):
-    if guess == secret:
-        return "Win", "🎉 Correct!"
-
-    try:
-        if guess > secret:
-            return "Too High", "📈 Go HIGHER!"
-        else:
-            return "Too Low", "📉 Go LOWER!"
-    except TypeError:
-        g = str(guess)
-        if g == secret:
-            return "Win", "🎉 Correct!"
-        if g > secret:
-            return "Too High", "📈 Go HIGHER!"
-        return "Too Low", "📉 Go LOWER!"
+# `check_guess` moved to `logic_utils.py` and imported above.
 
 
 def update_score(current_score: int, outcome: str, attempt_number: int):
@@ -134,6 +122,9 @@ with col3:
 if new_game:
     st.session_state.attempts = 0
     st.session_state.secret = random.randint(1, 100)
+    # FIXME: Logic breaks here — `status` is not reset to "playing" (and score/history aren't cleared),
+    # so after starting a new game the code below may call `st.stop()` because `st.session_state.status`
+    # can still be "won" or "lost". Resetting `st.session_state.status = "playing"` is needed here.
     st.success("New game started.")
     st.rerun()
 
@@ -155,12 +146,14 @@ if submit:
     else:
         st.session_state.history.append(guess_int)
 
-        if st.session_state.attempts % 2 == 0:
-            secret = str(st.session_state.secret)
-        else:
-            secret = st.session_state.secret
+        # Keep the secret numeric so `check_guess` performs numeric
+        # comparisons consistently (avoid lexicographic ordering).
+        #FIX: Refactored logic into logic_utils.py using agent mode
+        # See `logic_utils.check_guess` and `logic_utils.get_hint_message`.
+        secret = st.session_state.secret
 
-        outcome, message = check_guess(guess_int, secret)
+        outcome = check_guess(guess_int, secret)
+        message = get_hint_message(outcome)
 
         if show_hint:
             st.warning(message)

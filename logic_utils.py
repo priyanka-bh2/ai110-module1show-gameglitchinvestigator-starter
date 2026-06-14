@@ -18,7 +18,36 @@ def check_guess(guess, secret):
 
     outcome examples: "Win", "Too High", "Too Low"
     """
-    raise NotImplementedError("Refactor this function from app.py into logic_utils.py")
+    # Normalize to integers when possible to avoid lexicographic compares
+    try:
+        g = int(guess)
+    except Exception:
+        return "Invalid", "That is not a number."
+
+    try:
+        s = int(secret)
+    except Exception:
+        # Secret should always be numeric; if not, treat as internal error
+        return "Invalid", "Internal error: secret not numeric."
+
+    if g == s:
+        return "Win"
+
+    if g > s:
+        return "Too High"
+
+    return "Too Low"
+
+
+def get_hint_message(outcome: str):
+    """Return a user-friendly hint message for an outcome string."""
+    if outcome == "Win":
+        return "🎉 Correct!"
+    if outcome == "Too High":
+        return "📉 Go LOWER!"
+    if outcome == "Too Low":
+        return "📈 Go HIGHER!"
+    return ""
 
 
 def update_score(current_score: int, outcome: str, attempt_number: int):
