@@ -81,7 +81,7 @@ if "secret" not in st.session_state:
     st.session_state.secret = random.randint(low, high)
 
 if "attempts" not in st.session_state:
-    st.session_state.attempts = 1
+    st.session_state.attempts = 0
 
 if "score" not in st.session_state:
     st.session_state.score = 0
@@ -120,11 +120,25 @@ with col3:
     show_hint = st.checkbox("Show hint", value=True)
 
 if new_game:
+    # FIX: Refactored logic — New Game handler resets full game state.
+    # What was fixed: attempts are reset to 0 (fix off-by-one), `status` is reset
+    # to "playing" (prevents st.stop() from blocking the UI), `score` and
+    # `history` are cleared, and the new `secret` is chosen from the current
+    # difficulty range (`low, high`) instead of hardcoding 1..100.
+    # This ensures New Game produces a true fresh start.
+    # Reset attempts to the same initial value used when the app first loads
     st.session_state.attempts = 0
-    st.session_state.secret = random.randint(1, 100)
-    # FIXME: Logic breaks here — `status` is not reset to "playing" (and score/history aren't cleared),
-    # so after starting a new game the code below may call `st.stop()` because `st.session_state.status`
-    # can still be "won" or "lost". Resetting `st.session_state.status = "playing"` is needed here.
+
+    # Use the current difficulty range instead of hardcoding 1..100
+    st.session_state.secret = random.randint(low, high)
+
+    # FIXME: Logic breaks here — `status` was not being reset to "playing". Without this,
+    # the app can immediately call `st.stop()` below and prevent the new game from starting.
+    # Also reset score and history so the new game starts fresh.
+    st.session_state.score = 0
+    st.session_state.history = []
+    st.session_state.status = "playing"
+
     st.success("New game started.")
     st.rerun()
 
