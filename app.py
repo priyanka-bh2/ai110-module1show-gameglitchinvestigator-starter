@@ -1,17 +1,8 @@
 import random
 import streamlit as st
-from logic_utils import check_guess, get_hint_message
+from logic_utils import check_guess, get_hint_message, get_range_for_difficulty
 
 #FIX: Refactored logic into logic_utils.py using agent mode
-
-def get_range_for_difficulty(difficulty: str):
-    if difficulty == "Easy":
-        return 1, 20
-    if difficulty == "Normal":
-        return 1, 100
-    if difficulty == "Hard":
-        return 1, 50
-    return 1, 100
 
 
 def parse_guess(raw: str):
@@ -72,11 +63,34 @@ attempt_limit_map = {
 }
 attempt_limit = attempt_limit_map[difficulty]
 
+# Track the currently selected difficulty and reset the game when it changes.
+#FIX: Refactored logic
+# If the user selects a different difficulty from the sidebar, treat that as
+# starting a new game: reset attempts, score, history, status and pick a new
+# secret within the new difficulty range.
 low, high = get_range_for_difficulty(difficulty)
+
+# Track the currently selected difficulty and reset the game when it changes.
+# If the user selects a different difficulty from the sidebar, treat that as
+# starting a new game: reset attempts, score, history, status and pick a new
+# secret within the new difficulty range.
+if "current_difficulty" not in st.session_state:
+    st.session_state.current_difficulty = difficulty
+elif st.session_state.current_difficulty != difficulty:
+    st.session_state.current_difficulty = difficulty
+    st.session_state.attempts = 0
+    st.session_state.score = 0
+    st.session_state.history = []
+    st.session_state.status = "playing"
+    st.session_state.secret = random.randint(low, high)
 
 st.sidebar.caption(f"Range: {low} to {high}")
 st.sidebar.caption(f"Attempts allowed: {attempt_limit}")
 
+# FIXME: Logic breaks here where you believe the issue is located.
+# The secret is only created once when missing from session_state.
+# That means changing `difficulty` updates the displayed range but does not
+# regenerate the secret. Consider resetting the secret when difficulty changes.
 if "secret" not in st.session_state:
     st.session_state.secret = random.randint(low, high)
 
@@ -95,7 +109,7 @@ if "history" not in st.session_state:
 st.subheader("Make a guess")
 
 st.info(
-    f"Guess a number between 1 and 100. "
+    f"Guess a number between {low} and {high}. "
     f"Attempts left: {attempt_limit - st.session_state.attempts}"
 )
 
