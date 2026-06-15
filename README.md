@@ -25,10 +25,6 @@ It wrote the code, ran away, and now the game is unplayable.
 
 ## 📝 Document Your Experience
 
-## Document Your Experience
-
-## 📝 Document Your Experience
-
 The game's purpose is to be a simple Streamlit number guessing game where the player tries to guess a hidden secret number within a limited number of attempts, using "higher" or "lower" hints to narrow it down. When I first ran it, the UI loaded fine but the game itself was unreliable: hints were often wrong, guesses outside the valid range behaved strangely, the New Game button didn’t fully reset the round, and difficulty settings didn’t actually change how the game played. I used GitHub Copilot Chat in VS Code to trace these issues to the `check_guess` logic (inverted hints and int/str comparisons), broken state handling around `st.session_state.status`, and incorrect difficulty ranges and secret generation. I fixed the logic by refactoring `check_guess` and `get_range_for_difficulty` into `logic_utils.py`, correcting the comparisons and ranges, and updating the New Game and difficulty-change handlers to reset session state properly and regenerate the secret using the selected difficulty. Finally, I added pytest tests around hint behavior, New Game resets, and difficulty changes, and verified the fixes by manually playing the game while watching the Developer Debug Info.
 
 ## 📸 Demo Walkthrough
